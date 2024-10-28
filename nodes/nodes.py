@@ -1,3 +1,4 @@
+import hashlib
 import os
 import time
 from PIL import Image
@@ -23,7 +24,13 @@ class SSLLoadJson:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "file_path": ("STRING", {"default": ""}),
+                "file_path": (
+                    "STRING",
+                    {
+                        "default": "",
+                        "tooltip": "File path or url.",
+                    },
+                ),
             },
             "optional": {
                 "load_from_url": (
@@ -64,6 +71,35 @@ class SSLLoadJson:
             data,
             key_count,
         )
+
+    @classmethod
+    def IS_CHANGED(self, file_path, load_from_url=False, print_to_console=False):
+        if load_from_url:
+            response = requests.get(file_path, timeout=5)
+            if response.status_code != 200:
+                raise Exception(response.text)
+            data = response.json()
+        else:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+        if print_to_console:
+            print("JSON content:", json.dumps(data))
+        m = hashlib.sha256()
+        m.update(data)
+        return m.digest().hex()
+
+    @classmethod
+    def VALIDATE_INPUTS(
+        self,
+        file_path,
+        load_from_url=False,
+    ):
+        if load_from_url:
+            pass
+        else:
+            if not folder_paths.exists_annotated_filepath(file_path):
+                return "Invalid json file: {}".format(file_path)
+        return True
 
 
 class SSLGetJsonKeysCount:
@@ -126,7 +162,7 @@ class SSLButtonNode:
     FUNCTION = "execute"
 
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(s):
         return {
             "required": {
                 "string": ("STRING", {"default": "None"}),
@@ -163,7 +199,7 @@ class SSLSaveImageOutside:
                     "STRING",
                     {
                         "default": "%year%-%month%-%day%/ComfyUI_%width%x%height%",
-                        "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes.",
+                        "tooltip": "The prefix for the file to save. This may include formatting information such as %year%-%month%-%day% or %Empty Latent Image.width% to include values from nodes.",
                     },
                 ),
             },
