@@ -9,12 +9,14 @@ import numpy as np
 import folder_paths
 from comfy.cli_args import args
 import comfy.sd
+import random
 
 # 动态获取路径
 dir = os.path.dirname(__file__)  # 当前脚本目录
 last1 = os.path.basename(dir)  # 最后一个目录
 last2 = os.path.basename(os.path.dirname(dir))  # 倒数第二个目录
 gategory = f"{last2}👾👾👾/{last1}"  # 动态获取的当前文件夹路径
+MAX_SEED_NUM = 1125899906842624
 
 
 class SSLLoadJson:
@@ -155,23 +157,63 @@ class SSLLoadCheckpointByName:
         return out[:3]
 
 
-class SSLButtonNode:
-    CATEGORY = gategory
-    DESCRIPTION = "A button node that prints a message when clicked."
-    RETURN_TYPES = ()
-    FUNCTION = "execute"
-
+class SSLRandomNumInLoop:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
-                "string": ("STRING", {"default": "None"}),
+                "index": ("INT", {"forceInput": True}),
             },
-            "optional": {"execute_button": ("BUTTON", {"label": "Run"})},
+            "hidden": {
+                "prompt": "PROMPT",
+                "extra_pnginfo": "EXTRA_PNGINFO",
+                "my_unique_id": "UNIQUE_ID",
+            },
         }
 
-    def execute(self, string):
-        print("Button clicked!" + string)
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("num",)
+    CATEGORY = gategory
+    FUNCTION = "doit"
+
+    # 总是改变seed
+    @classmethod
+    def IS_CHANGED(self, index, prompt=None, extra_pnginfo=None, my_unique_id=None):
+        return float("NaN")
+
+    def doit(self, index, prompt=None, extra_pnginfo=None, my_unique_id=None):
+        return (random.randint(0, MAX_SEED_NUM),)
+
+
+class SSLRandomSeedInLoop:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "index": ("INT", {"forceInput": True}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": MAX_SEED_NUM}),
+            },
+            "hidden": {
+                "prompt": "PROMPT",
+                "extra_pnginfo": "EXTRA_PNGINFO",
+                "my_unique_id": "UNIQUE_ID",
+            },
+        }
+
+    RETURN_TYPES = ("INT",)
+    RETURN_NAMES = ("seed",)
+    CATEGORY = gategory
+    FUNCTION = "doit"
+
+    # 总是改变seed
+    @classmethod
+    def IS_CHANGED(
+        self, index, seed=0, prompt=None, extra_pnginfo=None, my_unique_id=None
+    ):
+        return float("NaN")
+
+    def doit(self, index, seed=0, prompt=None, extra_pnginfo=None, my_unique_id=None):
+        return (seed,)
 
 
 class SSLSaveImageOutside:

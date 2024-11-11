@@ -2,7 +2,8 @@ from .nodes.nodes import (
     SSLLoadJson,
     SSLGetJsonKeysCount,
     SSLLoadCheckpointByName,
-    SSLButtonNode,
+    SSLRandomNumInLoop,
+    SSLRandomSeedInLoop,
     SSLSaveImageOutside,
 )
 
@@ -12,7 +13,8 @@ NODE_CLASS_MAPPINGS = {
     "SSLLoadJson": SSLLoadJson,
     "SSLGetJsonKeysCount": SSLGetJsonKeysCount,
     "SSLLoadCheckpointByName": SSLLoadCheckpointByName,
-    "SSLButtonNode": SSLButtonNode,
+    "SSLRandomNumInLoop": SSLRandomNumInLoop,
+    # "SSLRandomSeedInLoop": SSLRandomSeedInLoop,
     "SSLSaveImageOutside": SSLSaveImageOutside,
 }
 
@@ -23,7 +25,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SSLLoadJson": "SSL Load Json",
     "SSLGetJsonKeysCount": "SSL Get Json Keys Count",
     "SSLLoadCheckpointByName": "SSL Load Checkpoint By Name",
-    "SSLButtonNode": "SSL Button Node",
+    "SSLRandomNumInLoop": "SSL Random Num In Loop",
+    # "SSLRandomSeedInLoop": "SSL Random Seed In Loop",
     "SSLSaveImageOutside": "SSL Save Image Outside",
 }
 
