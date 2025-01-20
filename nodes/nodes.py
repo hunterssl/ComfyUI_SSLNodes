@@ -10,6 +10,43 @@ import folder_paths
 from comfy.cli_args import args
 import comfy.sd
 import random
+import subprocess
+import platform
+
+from aiohttp import web
+from server import PromptServer
+
+# 获取服务器实例
+routes = PromptServer.instance.routes
+
+# 添加打开目录的 API
+@routes.get('/ssl/open_folder')
+async def open_folder(request):
+    try:
+        # 获取目录路径
+        folder_path = request.query.get('path')
+        if not folder_path or not os.path.exists(folder_path):
+            return web.json_response({"error": "Invalid directory"}, status=400)
+            
+        # 规范化路径
+        folder_path = os.path.normpath(folder_path)
+        
+        # 根据操作系统选择打开命令
+        system = platform.system().lower()
+        if system == 'windows':
+            subprocess.Popen(['explorer', folder_path])
+        elif system == 'darwin':  # macOS
+            subprocess.Popen(['open', folder_path])
+        elif system == 'linux':
+            subprocess.Popen(['xdg-open', folder_path])
+        else:
+            return web.json_response({"error": "Unsupported operating system"}, status=400)
+            
+        return web.json_response({"success": True})
+        
+    except Exception as e:
+        print(f"Error opening folder: {str(e)}")
+        return web.json_response({"error": str(e)}, status=500)
 
 # 动态获取路径
 dir = os.path.dirname(__file__)  # 当前脚本目录
@@ -218,9 +255,9 @@ class SSLRandomSeedInLoop:
 
 class SSLSaveImageOutside:
     """save image outside comfyui"""
-
+    
     def __init__(self):
-        self.output_dir = ""
+        self.output_dir = "E:/SD_Images_Files/ComfyUI"  # 默认目录
         self.type = "output"
         self.prefix_append = ""
         self.compress_level = 4
@@ -240,7 +277,7 @@ class SSLSaveImageOutside:
                 "filename_prefix": (
                     "STRING",
                     {
-                        "default": "%year%-%month%-%day%/ComfyUI_%width%x%height%",
+                        "default": "%year%-%month%-%day%/ComfyUI",
                         "tooltip": "The prefix for the file to save. This may include formatting information such as %year%-%month%-%day% or %Empty Latent Image.width% to include values from nodes.",
                     },
                 ),
@@ -309,20 +346,11 @@ class SSLSaveImageOutside:
             counter = 1
         return full_output_folder, filename, counter, subfolder, filename_prefix
 
-    def save_images(
-        self,
-        images,
-        save_to_dir="",
-        filename_prefix="ComfyUI",
-        prompt=None,
-        extra_pnginfo=None,
-    ):
+    def save_images(self, images, save_to_dir="", filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
+        self.output_dir = save_to_dir  # 保存目录路径
         filename_prefix += self.prefix_append
-        self.output_dir = save_to_dir
-        full_output_folder, filename, counter, subfolder, filename_prefix = (
-            self.get_save_image_path(
-                filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0]
-            )
+        full_output_folder, filename, counter, subfolder, filename_prefix = self.get_save_image_path(
+            filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0]
         )
         results = list()
         for batch_number, image in enumerate(images):
